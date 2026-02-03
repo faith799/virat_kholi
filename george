@@ -1,0 +1,349 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Alert: GEORGE</title>
+    
+    <!-- FONTS: VT323 for Terminal, Pacifico & Quicksand for the Cute Part -->
+    <link href="https://fonts.googleapis.com/css2?family=VT323&family=Pacifico&family=Quicksand:wght@400;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* --- GLOBAL SETUP --- */
+        body {
+            background-color: #000;
+            margin: 0;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: background 1.5s ease-in-out;
+        }
+
+        /* --- PART 1: THE HACKER TERMINAL --- */
+        .terminal-font {
+            font-family: 'VT323', monospace;
+            color: #0f0;
+            text-shadow: 0 0 5px #0f0;
+        }
+
+        .scanlines {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
+                        linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            background-size: 100% 2px, 3px 100%;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        #terminal {
+            width: 85%;
+            max-width: 800px;
+            font-size: 1.4rem; /* Slightly smaller for mobile compatibility */
+            z-index: 2;
+        }
+
+        .cursor {
+            display: inline-block; width: 10px; height: 20px;
+            background-color: #0f0;
+            animation: blink 1s infinite;
+        }
+        @keyframes blink { 50% { opacity: 0; } }
+
+        .btn-container {
+            margin-top: 30px; display: flex; gap: 20px;
+            position: relative; height: 100px;
+        }
+
+        button.hack-btn {
+            background: transparent; border: 2px solid #0f0; color: #0f0;
+            font-family: 'VT323', monospace; font-size: 1.5rem;
+            padding: 10px 20px; cursor: pointer;
+            box-shadow: 0 0 5px #0f0; transition: 0.3s;
+        }
+        button.hack-btn:hover { background: #0f0; color: #000; }
+
+        #no-btn { position: absolute; left: 200px; }
+
+        /* --- PART 2: THE CUTE TICKET UI --- */
+        #ticket-wrapper {
+            display: none; /* Hidden initially */
+            position: relative;
+            z-index: 20;
+            animation: floatUp 1s ease-out;
+        }
+
+        .ticket-card {
+            background: #fff;
+            width: 350px;
+            max-width: 90vw;
+            padding: 0;
+            border-radius: 20px;
+            box-shadow: 0 20px 50px rgba(255, 105, 180, 0.4);
+            font-family: 'Quicksand', sans-serif;
+            text-align: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* The decorative top pink header */
+        .ticket-header {
+            background: #ff8fab;
+            padding: 20px;
+            color: white;
+            border-bottom: 3px dashed #fff;
+        }
+
+        .ticket-header h1 {
+            font-family: 'Pacifico', cursive;
+            margin: 0;
+            font-size: 2.2rem;
+            font-weight: normal;
+        }
+
+        .ticket-body {
+            padding: 25px;
+            color: #555;
+            background: #fff0f5; /* Very light pink */
+        }
+
+        .emoji-icon { font-size: 1.5rem; margin-right: 8px; }
+
+        .info-row {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            margin: 15px 0;
+            text-align: left;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            padding-bottom: 5px;
+        }
+
+        .label { font-weight: 700; color: #ff69b4; margin-right: 10px; min-width: 60px; }
+        .value { color: #333; font-weight: 500; }
+
+        /* The Receipt Section */
+        .receipt-box {
+            background: #fff;
+            border: 2px solid #ffb7b2;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+            font-size: 0.9rem;
+        }
+        
+        .receipt-item { display: flex; justify-content: space-between; margin-bottom: 5px; }
+        .total-line { 
+            border-top: 2px dashed #ffb7b2; 
+            margin-top: 10px; padding-top: 10px; 
+            font-weight: bold; color: #ff69b4; font-size: 1.1rem;
+        }
+
+        /* Bouncing Heart Animation */
+        .big-heart {
+            font-size: 3rem;
+            margin: -10px auto 10px auto;
+            display: inline-block;
+            animation: heartbeat 1.5s infinite;
+        }
+
+        @keyframes heartbeat {
+            0% { transform: scale(1); }
+            15% { transform: scale(1.3); }
+            30% { transform: scale(1); }
+            45% { transform: scale(1.15); }
+            60% { transform: scale(1); }
+        }
+
+        @keyframes floatUp {
+            from { transform: translateY(50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        /* Background Floating Hearts */
+        .bg-heart {
+            position: absolute;
+            color: rgba(255, 255, 255, 0.6);
+            animation: floatBackground 10s linear infinite;
+            bottom: -10vh;
+            z-index: 1;
+        }
+
+        @keyframes floatBackground {
+            0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(-120vh) rotate(360deg); opacity: 0; }
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- SCANLINES OVERLAY -->
+    <div class="scanlines" id="scanlines"></div>
+
+    <!-- TERMINAL SCREEN -->
+    <div id="terminal" class="terminal-font">
+        <div id="console-output"></div>
+        <div id="interaction" style="display:none;">
+            <p style="color: #ff69b4;">>> SYSTEM MESSAGE: PAHADI WILL YOU BE MY VALENTINE?</p>
+            <div class="btn-container">
+                <button id="yes-btn" class="hack-btn">[ ACCEPT_LOVE.EXE ]</button>
+                <button id="no-btn" class="hack-btn">[ DECLINE ]</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CUTE TICKET SCREEN -->
+    <div id="ticket-wrapper">
+        <div class="ticket-card">
+            <div class="ticket-header">
+                <div class="big-heart">💖</div>
+                <h1>It's a Date, snehal gupta!</h1>
+            </div>
+            
+            <div class="ticket-body">
+                <p style="font-style: italic; margin-bottom: 20px;">Verification Complete. Get ready.</p>
+                
+                <div class="info-row">
+                    <span class="emoji-icon">📅</span>
+                    <span class="label">DATE:</span>
+                    <span class="value">Feb 15th</span>
+                </div>
+                <div class="info-row">
+                    <span class="emoji-icon">📍</span>
+                    <span class="label">LOC:</span>
+                    <span class="value">chilis,chennai</span>
+                </div>
+
+                <!-- Receipt Section inside the ticket -->
+                <div class="receipt-box">
+                    <div class="receipt-item">
+                        <span>My Whole Heart</span>
+                        <span>$0.00</span>
+                    </div>
+                    <div class="receipt-item">
+                        <span>Dinner & Drinks</span>
+                        <span style="color:#ff69b4; font-weight:bold;">On ME</span>
+                    </div>
+                    <div class="receipt-item" style="color: #888;">
+                        <span>Your Wallet</span>
+                        <span>Safe</span>
+                    </div>
+                    <div class="total-line">
+                        <div class="receipt-item">
+                            <span>TOTAL COST:</span>
+                            <span>FOREVER</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <p style="margin-top: 15px; font-size: 0.8rem; color: #aaa;">No returns or exchanges allowed.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confetti Script -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <script>
+        // --- LOGIC ---
+        const output = document.getElementById('console-output');
+        const terminal = document.getElementById('terminal');
+        const interaction = document.getElementById('interaction');
+        const yesBtn = document.getElementById('yes-btn');
+        const noBtn = document.getElementById('no-btn');
+        const ticketWrapper = document.getElementById('ticket-wrapper');
+        const scanlines = document.getElementById('scanlines');
+
+        // Boot Sequence (Hacker Text)
+        const bootSequence = [
+            { text: "⚠ CRITICAL SYSTEM FAILURE ⚠", color: "red", delay: 100 },
+            { text: "Unauthorized access detected in sector: HEART_MONITOR...", delay: 1000 },
+            { text: "Firewall breached by user: GEORGE...", delay: 2000 },
+            { text: "Calculating compatibility...", delay: 3000 },
+            { text: "> Deleting loneliness... [OK]", delay: 4000 },
+            { text: "> Uploading butterflies.dll... [OK]", delay: 5000 },
+            { text: "> Installing LOVE.exe...", delay: 6000 },
+            { text: "💖 INSTALLATION COMPLETE 💖", color: "#ff69b4", delay: 7500 }
+        ];
+
+        async function typeLine(text, color) {
+            const p = document.createElement('p');
+            if(color) p.style.color = color;
+            output.appendChild(p);
+            
+            const cursor = document.createElement('span');
+            cursor.className = 'cursor';
+            p.appendChild(cursor);
+
+            // Typing speed (slightly faster for better flow)
+            for (let i = 0; i < text.length; i++) {
+                p.insertBefore(document.createTextNode(text[i]), cursor);
+                await new Promise(r => setTimeout(r, 35)); 
+            }
+            p.removeChild(cursor);
+        }
+
+        async function startBoot() {
+            // Wait a tiny bit just to ensure DOM is ready, then go
+            await new Promise(r => setTimeout(r, 100));
+            
+            for (let line of bootSequence) {
+                // If there's a delay defined, wait.
+                await new Promise(r => setTimeout(r, line.delay - (line.prevDelay || 0)));
+                await typeLine(line.text, line.color);
+                
+                // Keep scrolling down
+                window.scrollTo(0, document.body.scrollHeight);
+            }
+            // Show buttons
+            interaction.style.display = 'block';
+            window.scrollTo(0, document.body.scrollHeight);
+        }
+
+        // Start immediately
+        startBoot();
+
+        // Dodge Button Logic (The "No" button runs away)
+        noBtn.addEventListener('mouseover', () => {
+            const x = Math.random() * (window.innerWidth - 100);
+            const y = Math.random() * (window.innerHeight - 50);
+            noBtn.style.position = 'fixed';
+            noBtn.style.left = `${x}px`;
+            noBtn.style.top = `${y}px`;
+        });
+
+        // ACCEPT Logic
+        yesBtn.addEventListener('click', () => {
+            // 1. Remove Hacker Vibes
+            terminal.style.display = 'none';
+            scanlines.style.display = 'none';
+            
+            // 2. Change Background to Cute Gradient
+            document.body.style.background = "linear-gradient(135deg, #ff9a9e 0%, #fecfef 99%, #fecfef 100%)";
+            
+            // 3. Show Ticket
+            ticketWrapper.style.display = 'block';
+
+            // 4. Create Floating Hearts Background
+            createFloatingHearts();
+
+            // 5. Confetti Explosion
+            confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 }, colors: ['#ff69b4', '#ff1493', '#fff'] });
+        });
+
+        function createFloatingHearts() {
+            for(let i=0; i<20; i++) {
+                const heart = document.createElement('div');
+                heart.innerHTML = '❤';
+                heart.className = 'bg-heart';
+                heart.style.left = Math.random() * 100 + 'vw';
+                heart.style.animationDuration = Math.random() * 5 + 5 + 's';
+                heart.style.fontSize = Math.random() * 30 + 10 + 'px';
+                document.body.appendChild(heart);
+            }
+        }
+    </script>
+</body>
+</html>
